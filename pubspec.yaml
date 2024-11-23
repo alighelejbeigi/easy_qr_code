@@ -1,7 +1,9 @@
 name: easy_qr_code
 description: "Effortlessly create and read QR codes using your device's camera or gallery. A simple and intuitive package to integrate QR code functionality in your Flutter app with minimal setup."
 version: 0.0.1
-homepage: ./
+homepage: https://github.com/alibeigi95/easy_qr_code
+repository: https://github.com/alibeigi95/easy_qr_code
+publish_to: https://pub.dev
 
 environment:
   sdk: '>=3.4.3 <4.0.0'
