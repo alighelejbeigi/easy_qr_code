@@ -24,24 +24,21 @@ if (flutterVersionName == null) {
 }
 
 android {
-    namespace = "com.example.example"
-    compileSdk = flutter.compileSdkVersion
-    ndkVersion = flutter.ndkVersion
+    compileSdkVersion 34
 
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
+    sourceSets {
+        main.java.srcDirs += 'src/main/kotlin'
     }
 
+    namespace 'com.example.example'
+
     defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId = "com.example.example"
-        // You can update the following values to match your application needs.
-        // For more information, see: https://docs.flutter.dev/deployment/android#reviewing-the-gradle-build-configuration.
-        minSdk = flutter.minSdkVersion
-        targetSdk = flutter.targetSdkVersion
-        versionCode = flutterVersionCode.toInteger()
-        versionName = flutterVersionName
+        minSdkVersion 23
+        targetSdkVersion 31
+        multiDexEnabled true
+        versionCode flutterVersionCode.toInteger()
+        versionName flutterVersionName
+
     }
 
     buildTypes {
@@ -53,6 +50,14 @@ android {
     }
 }
 
+android {
+    ndkVersion "25.1.8937393"
+}
+
 flutter {
     source = "../.."
+}
+
+dependencies {
+    implementation 'com.android.support:multidex:1.0.3'
 }

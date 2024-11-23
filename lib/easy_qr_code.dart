@@ -1,7 +1,2 @@
-library easy_qr_code;
-
-/// A Calculator.
-class Calculator {
-  /// Returns [value] plus 1.
-  int addOne(int value) => value + 1;
-}
+export 'src/component/easy_qr_code_generator.dart';
+export 'src/component/easy_qr_code_reader.dart';
