@@ -3,13 +3,20 @@ import 'dart:ui' as ui;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:qr_flutter/qr_flutter.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:uuid/uuid.dart';
 
+import '../models/qr_painter_with_background.dart';
+
+/// A utility class for generating, saving, and sharing QR codes.
+///
+/// This class provides methods to create QR codes as widgets, images,
+/// save them to storage, and share them directly.
 class EasyQRCodeGenerator {
   /// Generates and returns a QR code as a Widget with a white background.
   ///
   /// [data] is the content to encode into the QR code.
-  /// [size] is the size of the generated QR code widget (default is 200.0).
+  /// [size] specifies the size of the generated QR code widget (default is 200.0).
   Future<Widget> generateQRCodeWidget({
     required String data,
     double size = 200.0,
@@ -39,6 +46,9 @@ class EasyQRCodeGenerator {
   }
 
   /// Generates and returns a QR code as an image with a white background.
+  ///
+  /// [data] is the content to encode into the QR code.
+  /// [size] specifies the dimensions of the QR code image (default is 200.0).
   Future<ui.Image> generateQRCodeImage({
     required String data,
     double size = 200.0,
@@ -51,11 +61,11 @@ class EasyQRCodeGenerator {
     final recorder = ui.PictureRecorder();
     final canvas = Canvas(recorder);
 
-    // Draw a white background
+    // Draw a white background.
     final paint = Paint()..color = Colors.white;
     canvas.drawRect(Rect.fromLTWH(0, 0, size, size), paint);
 
-    // Draw the QR code
+    // Draw the QR code.
     final painter = QrPainterWithBackground(qrCode: qrCode);
     painter.paint(canvas, Size(size, size));
 
@@ -63,42 +73,47 @@ class EasyQRCodeGenerator {
     return picture.toImage(size.toInt(), size.toInt());
   }
 
-  Future<void> saveQRCodeImage(ui.Image image) async {
-    const uuid = Uuid();
-    // Convert the image to ByteData
-    final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
-
-    if (byteData != null) {
+  /// Saves the QR code image from a given Uint8List to the device storage.
+  ///
+  /// [qrBytes] is the byte data of the QR code image.
+  Future<void> saveQRCodeFromBytes({required Uint8List qrBytes}) async {
+    try {
+      const uuid = Uuid();
       String filePath =
-          '/storage/emulated/0/Download/easyQrCode${uuid.v4()}.jpg';
+          '/storage/emulated/0/Download/easyQrCode${uuid.v4()}.png';
 
-      // Write the ByteData to a file
+      // Write the bytes to a file.
       final file = File(filePath);
-      await file.writeAsBytes(byteData.buffer.asUint8List());
+      await file.writeAsBytes(qrBytes);
 
       if (kDebugMode) {
         print('QR Code saved to $filePath');
       }
+    } catch (e) {
+      debugPrint('Error saving QR Code: $e');
     }
   }
-}
 
-class QrPainterWithBackground extends CustomPainter {
-  final QrCode qrCode;
+  /// Shares the QR code directly from a Uint8List without regenerating it.
+  ///
+  /// [qrBytes] is the byte data of the QR code image.
+  /// [name] (optional) specifies the name of the shared file.
+  Future<void> shareQRCodeFromBytes({
+    required Uint8List qrBytes,
+    String? name,
+  }) async {
+    try {
+      // Create an XFile from the bytes for sharing.
+      final xFile = XFile.fromData(
+        qrBytes,
+        mimeType: 'image/png',
+        name: name,
+      );
 
-  QrPainterWithBackground({required this.qrCode});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    // Draw a white background
-    final paint = Paint()..color = Colors.white;
-    canvas.drawRect(Rect.fromLTWH(0, 0, size.width, size.height), paint);
-
-    // Draw the QR code
-    final qrPainter = QrPainter.withQr(qr: qrCode);
-    qrPainter.paint(canvas, size);
+      // Share the file using share_plus.
+      await Share.shareXFiles([xFile], text: 'Here is your QR Code!');
+    } catch (e) {
+      debugPrint('Error sharing QR Code: $e');
+    }
   }
-
-  @override
-  bool shouldRepaint(CustomPainter oldDelegate) => false;
 }

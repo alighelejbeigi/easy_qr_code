@@ -1,5 +1,4 @@
 import 'dart:ui' as ui;
-
 import 'package:easy_qr_code/easy_qr_code.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -12,11 +11,10 @@ void main() {
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
+      title: 'Easy QR Code Demo',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
@@ -27,57 +25,61 @@ class MyApp extends StatelessWidget {
 }
 
 class HomePage extends StatefulWidget {
-  const HomePage({super.key}); // Constructor for HomePage
+  const HomePage({super.key});
 
   @override
-  State<HomePage> createState() =>
-      _HomePageState(); // Create state for HomePage
+  State<HomePage> createState() => _HomePageState();
 }
 
 class _HomePageState extends State<HomePage> {
-  String? _qrCodeResult; // Holds the result of QR code decoding
+  String? _qrCodeResult; // Stores the decoded QR code result
   final TextEditingController _textController =
-      TextEditingController(); // Controller for the text input
+      TextEditingController(); // Controller for text input
   final EasyQRCodeGenerator qrGenerator =
       EasyQRCodeGenerator(); // QR code generator instance
-  Widget? result; // Holds the generated QR code widget
+  Widget? result; // Stores the generated QR code widget
   final ImagePicker _picker = ImagePicker(); // Image picker instance
-  Uint8List? imageBytes;
+  Uint8List? imageBytes; // Stores the image bytes for generated QR code
 
-  // Method to pick an image from gallery and decode the QR code
+  // Method to pick an image and decode the QR code
   Future<void> _pickImageAndDecodeQRCode() async {
     try {
       final imageFile = await _picker.pickImage(
-          source: ImageSource.gallery); // Pick image from gallery
+          source: ImageSource.gallery); // Open image picker
       if (imageFile == null) return;
 
       // Read image as byte data (Uint8List)
       final bytes = await imageFile.readAsBytes();
-      // Decode the QR code from the bytes
       final qrReader = EasyQRCodeReader();
-      final decodedResult = await qrReader.decode(bytes);
+      final decodedResult =
+          await qrReader.decode(bytes); // Decode QR code from image
 
-      // Update the result on the screen
       setState(() {
-        _qrCodeResult = decodedResult ?? 'No QR code found.';
+        _qrCodeResult =
+            decodedResult ?? 'No QR code found.'; // Update the result
       });
     } catch (e) {
-      _handleError(e);
+      _handleError(e); // Handle error in QR code processing
     }
   }
 
+  // Method to save generated QR code image
   Future<void> saveQRCodeImage() async {
-    final image =
-        await qrGenerator.generateQRCodeImage(data: _textController.text);
-    qrGenerator.saveQRCodeImage(image);
+    qrGenerator.saveQRCodeFromBytes(qrBytes: imageBytes!);
   }
 
+  // Method to share generated QR code image
+  Future<void> shareQRCodeImage() async {
+    qrGenerator.shareQRCodeFromBytes(qrBytes: imageBytes!);
+  }
+
+  // Method to convert image to byte array (Uint8List)
   Future<Uint8List?> convertImageToBytes(ui.Image image) async {
     final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
     return byteData?.buffer.asUint8List();
   }
 
-  // Method to handle errors in QR code processing
+  // Method to handle errors during QR code decoding
   void _handleError(dynamic error) {
     if (kDebugMode) {
       print('Error processing QR code: $error');
@@ -87,17 +89,19 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
-  // Method to generate a QR code widget based on text input
+  // Method to generate QR code from the text input
   Future<void> _generateQRCode() async {
     final data = _textController.text;
     if (data.isNotEmpty) {
-      // Generate the QR code widget
-      final qrWidget = await qrGenerator.generateQRCodeWidget(data: data);
-      final image = await qrGenerator.generateQRCodeImage(data: data);
-      final bytes = await convertImageToBytes(image);
+      final qrWidget = await qrGenerator.generateQRCodeWidget(
+          data: data); // Generate QR widget
+      final image = await qrGenerator.generateQRCodeImage(
+          data: data); // Generate QR image
+      final bytes =
+          await convertImageToBytes(image); // Convert image to byte data
       setState(() {
-        result = qrWidget; // Update the result with the generated QR code
-        imageBytes = bytes;
+        result = qrWidget; // Update QR widget to display
+        imageBytes = bytes; // Store the image bytes
       });
     }
   }
@@ -112,9 +116,8 @@ class _HomePageState extends State<HomePage> {
         child: SingleChildScrollView(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
-            // Align widgets to the center
             children: [
-              // Display QR code result if available
+              // QR Code result display
               _buildQRCodeResult(),
 
               const SizedBox(height: 20),
@@ -124,45 +127,19 @@ class _HomePageState extends State<HomePage> {
 
               const SizedBox(height: 20),
 
-              // Input field for QR code data
+              // TextField for QR code data input
               _buildTextField(),
 
               const SizedBox(height: 16),
 
-              // Button to generate a QR code from the input
+              // Button to generate QR code from input
               _buildGenerateQRCodeButton(),
 
-              // Display the generated QR code widget if available
+              // Display generated QR code widget and image
+              _buildQRCodeDisplay(),
 
-              Row(
-                children: [
-                  Column(
-                    children: [
-                      result != null
-                          ? const Text('widget show')
-                          : const SizedBox(),
-                      result != null ? result! : const SizedBox(),
-                    ],
-                  ),
-                  const SizedBox(width: 20),
-                  Column(
-                    children: [
-                      imageBytes != null
-                          ? const Text('Image show')
-                          : const SizedBox(),
-                      imageBytes != null
-                          ? Image.memory(imageBytes!)
-                          : const SizedBox(),
-                    ],
-                  ),
-                ],
-              ),
-              imageBytes != null
-                  ? IconButton(
-                      onPressed: saveQRCodeImage,
-                      icon: const Icon(Icons.save),
-                    )
-                  : const SizedBox(),
+              // Save and Share buttons for the generated QR code
+              _buildSaveAndShareButtons(),
             ],
           ),
         ),
@@ -170,14 +147,15 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  // Method to build the QR code result display widget
+  // Widget to display the decoded QR code result
   Widget _buildQRCodeResult() {
     return _qrCodeResult != null
-        ? Text('QR Code Result: $_qrCodeResult')
+        ? Text('QR Code Result: $_qrCodeResult',
+            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold))
         : const SizedBox();
   }
 
-  // Method to build the button for picking an image and decoding QR code
+  // Button to pick an image and scan for a QR code
   Widget _buildPickImageButton() {
     return ElevatedButton(
       onPressed: _pickImageAndDecodeQRCode,
@@ -185,22 +163,72 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  // Method to build the text field for entering QR code data
+  // TextField for entering QR code data
   Widget _buildTextField() {
     return TextField(
       controller: _textController,
       decoration: const InputDecoration(
         labelText: 'Enter data for QR Code',
         border: OutlineInputBorder(),
+        contentPadding: EdgeInsets.symmetric(vertical: 10, horizontal: 10),
       ),
     );
   }
 
-  // Method to build the button for generating QR code
+  // Button to generate a QR code from the input text
   Widget _buildGenerateQRCodeButton() {
     return ElevatedButton(
       onPressed: _generateQRCode,
       child: const Text('Generate QR Code'),
     );
+  }
+
+  // Display the generated QR code widget or image
+  Widget _buildQRCodeDisplay() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Column(
+          children: [
+            if (result != null) ...[
+              const Text('Generated QR Code:'),
+              result!,
+            ],
+          ],
+        ),
+        const SizedBox(width: 20),
+        Column(
+          children: [
+            if (imageBytes != null) ...[
+              const Text('Generated QR Code Image:'),
+              Image.memory(imageBytes!),
+            ]
+          ],
+        ),
+      ],
+    );
+  }
+
+  // Save and Share buttons for the generated QR code
+  Widget _buildSaveAndShareButtons() {
+    if (imageBytes == null) {
+      return const SizedBox(); // Only show buttons if image is generated
+    } else {
+      return Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          IconButton(
+            onPressed: saveQRCodeImage,
+            icon: const Icon(Icons.save),
+            tooltip: 'Save QR Code',
+          ),
+          IconButton(
+            onPressed: shareQRCodeImage,
+            icon: const Icon(Icons.share),
+            tooltip: 'Share QR Code',
+          ),
+        ],
+      );
+    }
   }
 }
