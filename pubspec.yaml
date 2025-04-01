@@ -1,8 +1,8 @@
 name: easy_qr_code
 description: "Simple QR code generation and decoding for Flutter apps with minimal setup."
-version: 0.1.1
-homepage: https://github.com/alibeigi95/easy_qr_code
-repository: https://github.com/alibeigi95/easy_qr_code
+version: 0.1.2
+homepage: https://github.com/alighelejbeigi/easy_qr_code
+repository: https://github.com/alighelejbeigi/easy_qr_code
 
 environment:
   sdk: '>=3.4.3 <4.0.0'
