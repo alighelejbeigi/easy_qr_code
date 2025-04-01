@@ -1,11 +1,13 @@
+## 0.1.2
+* Update github url
+
 ## 0.1.1
-* Update example design 
+* Update example design
 
 ## 0.1.0
 * Added QR code generation with an image display (both widget and image formats).
 * Implemented the ability to save generated QR code images to the device.
 * Added the option to share the generated QR code image.
-
 
 ## 0.0.1
 * initial release.
